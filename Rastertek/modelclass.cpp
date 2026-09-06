@@ -100,19 +100,22 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	// 정점 배열에 데이터를 채움.
 	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);	// 좌하단.
 	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
+	vertices[0].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
-	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);	// 상단 중앙.
+	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);		// 상단 중앙.
 	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
+	vertices[1].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
-	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);	// 우하단.
+	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);		// 우하단.
 	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
+	vertices[2].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
 	// 인덱스 배열에 데이터를 채움.
 	indices[0] = 0;	// 좌하단
 	indices[1] = 1; // 상단 중앙.
 	indices[2] = 2;	// 우하단
 
-	// 정적 정점 ㅂ버퍼의 설명 구조체를 설정.
+	// 정적 정점 버퍼의 설명 구조체를 설정.
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	vertexBufferDesc.ByteWidth = sizeof(VertexType) * m_vertexCount;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
