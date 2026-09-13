@@ -25,6 +25,7 @@ ApplicationClass::~ApplicationClass()
 
 bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
+	char modelFilename[128];
 	char textureFilename[128];
 	bool result = false;
 	 
@@ -53,14 +54,17 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// 카메라의 초기 위치를 설정.
 	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
 
-	// 모델 객체를 생성하고 초기화.
-	m_Model = new ModelClass;
+	// 모델 파일 이름을 설정.
+	strcpy_s(modelFilename, "data/cube.txt");
 
 	// 불러올 텍스처 파일의 이름을 설정.
 	strcpy_s(textureFilename, "data/stone01.tga");
 
+	// 모델 객체를 생성하고 초기화.
+	m_Model = new ModelClass;
+
 	result = m_Model->Initialize(
-		m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), textureFilename);
+		m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), textureFilename, modelFilename);
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
@@ -136,8 +140,8 @@ bool ApplicationClass::Frame()
 	static float rotation = 0.0f;
 	bool result = false;
 
-	// 삼각형 회전값을 매 프레임 갱신.
-	rotation -= 0.0174532925f * 0.1f;
+	// 큐브 회전값을 매 프레임 갱신.
+	rotation -= 0.0174532925f * 0.25f;
 	if (rotation < 0.0f)
 	{
 		// 같은 방향을 유지하면서 회전각을 양수로 돌려놓음.
@@ -172,7 +176,7 @@ bool ApplicationClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
-	// 삼각형이 회전하도록 월드 행렬을 회전 값으로 회전시킴.
+	// 큐브의 회전값을 월드 행렬에 적용.
 	worldMatrix = XMMatrixRotationY(rotation);
 
 	// 모델의 정점·인덱스 버퍼를 그래픽 파이프라인에 올려 그릴 준비를 함.
