@@ -29,6 +29,7 @@ private:
 
 	struct LightBufferType
 	{
+		XMFLOAT4 ambientColor;
 		XMFLOAT4 diffuseColor;
 		XMFLOAT3 lightDirection;
 		float padding;	// CreateBuffer 요구사항(16의 배수)에 맞추기 위한 추가 패딩.
@@ -49,6 +50,7 @@ public:
 		XMMATRIX,
 		ID3D11ShaderResourceView*,
 		XMFLOAT3,
+		XMFLOAT4,
 		XMFLOAT4
 	);
 
@@ -64,6 +66,7 @@ private:
 		XMMATRIX,
 		ID3D11ShaderResourceView*,
 		XMFLOAT3,
+		XMFLOAT4,
 		XMFLOAT4
 	);
 	void RenderShader(ID3D11DeviceContext*, int);

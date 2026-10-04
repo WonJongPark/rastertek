@@ -84,8 +84,9 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// 빛 객체를 생성하고 초기화.
 	m_Light = new LightClass;
 
+	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
+	m_Light->SetDirection(1.0f, 0.0f, 0.0f);
 
 	return true;
 }
@@ -161,7 +162,7 @@ bool ApplicationClass::Frame()
 
 bool ApplicationClass::Render(float rotation)
 {
-	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, rotateMatrix, translateMatrix, scaleMatrix, srMatrix;
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
 
 
@@ -176,12 +177,8 @@ bool ApplicationClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
-	// 첫 번째 큐브의 회전·이동 행렬을 구성.
-	rotateMatrix = XMMatrixRotationY(rotation);	// 회전 행렬을 만듦.
-	translateMatrix = XMMatrixTranslation(-2.0f, 0.0f, 0.0f);	// 이동 행렬을 만듦.
-
-	// 이들을 곱해 최종 월드 변환 행렬을 만듦.
-	worldMatrix = XMMatrixMultiply(rotateMatrix, translateMatrix);
+	// 큐브의 Y축 회전을 월드 행렬에 적용.
+	worldMatrix = XMMatrixRotationY(rotation);
 
 	// 모델의 정점·인덱스 버퍼를 그래픽 파이프라인에 올려 그릴 준비를 함.
 	m_Model->Render(m_Direct3D->GetDeviceContext());
@@ -195,33 +192,7 @@ bool ApplicationClass::Render(float rotation)
 		projectionMatrix,
 		m_Model->GetTexture(),
 		m_Light->GetDirection(),
-		m_Light->GetDiffuseColor()
-	);
-	if (!result)
-	{
-		return false;
-	}
-
-	scaleMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);	// 스케일 행렬을 만듦.
-	rotateMatrix = XMMatrixRotationY(rotation);	// 회전 행렬을 만듦.
-	translateMatrix = XMMatrixTranslation(2.0f, 0.0f, 0.0f);	// 이동 행렬을 만듦.
-
-	// 축소·회전·이동 행렬을 곱해 최종 월드 변환 행렬을 만듦.
-	srMatrix = XMMatrixMultiply(scaleMatrix, rotateMatrix);
-	worldMatrix = XMMatrixMultiply(srMatrix, translateMatrix);
-
-	// 그리기를 준비하기 위해 모델의 정점·인덱스 버퍼를 그래픽 파이프라인에 올림.
-	m_Model->Render(m_Direct3D->GetDeviceContext());
-
-	// 라이트 셰이더로 모델을 렌더링.
-	result = m_LightShader->Render(
-		m_Direct3D->GetDeviceContext(),
-		m_Model->GetIndexCount(),
-		worldMatrix,
-		viewMatrix,
-		projectionMatrix,
-		m_Model->GetTexture(),
-		m_Light->GetDirection(),
+		m_Light->GetAmbientColor(),
 		m_Light->GetDiffuseColor()
 	);
 	if (!result)

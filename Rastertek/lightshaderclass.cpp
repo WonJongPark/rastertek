@@ -69,6 +69,7 @@ bool LightShaderClass::Render(
 	XMMATRIX projectionMatrix,
 	ID3D11ShaderResourceView* texture,
 	XMFLOAT3 lightDirection,
+	XMFLOAT4 ambientColor,
 	XMFLOAT4 diffuseColor)
 {
 	bool result;
@@ -82,6 +83,7 @@ bool LightShaderClass::Render(
 		projectionMatrix,
 		texture,
 		lightDirection,
+		ambientColor,
 		diffuseColor
 	);
 	if (!result)
@@ -394,6 +396,7 @@ bool LightShaderClass::SetShaderParameters(
 	XMMATRIX projectionMatrix,
 	ID3D11ShaderResourceView* texture,
 	XMFLOAT3 lightDirection,
+	XMFLOAT4 ambientColor,
 	XMFLOAT4 diffuseColor)
 {
 	HRESULT result;
@@ -446,6 +449,7 @@ bool LightShaderClass::SetShaderParameters(
 	dataPtr2 = (LightBufferType*)mappedResource.pData;
 
 	// 조명 변수들을 상수 버퍼에 복사.
+	dataPtr2->ambientColor = ambientColor;
 	dataPtr2->diffuseColor = diffuseColor;
 	dataPtr2->lightDirection = lightDirection;
 	dataPtr2->padding = 0.0f;
