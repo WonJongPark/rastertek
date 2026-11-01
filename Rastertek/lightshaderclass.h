@@ -27,12 +27,19 @@ private:
 		XMMATRIX projection;
 	};
 
+	struct CameraBufferType
+	{
+		XMFLOAT3 cameraPosition;
+		float padding;
+	};
+
 	struct LightBufferType
 	{
 		XMFLOAT4 ambientColor;
 		XMFLOAT4 diffuseColor;
 		XMFLOAT3 lightDirection;
-		float padding;	// CreateBuffer 요구사항(16의 배수)에 맞추기 위한 추가 패딩.
+		float specularPower;
+		XMFLOAT4 specularColor;
 	};
 
 public:
@@ -51,7 +58,10 @@ public:
 		ID3D11ShaderResourceView*,
 		XMFLOAT3,
 		XMFLOAT4,
-		XMFLOAT4
+		XMFLOAT4,
+		XMFLOAT3,
+		XMFLOAT4,
+		float
 	);
 
 private:
@@ -67,7 +77,10 @@ private:
 		ID3D11ShaderResourceView*,
 		XMFLOAT3,
 		XMFLOAT4,
-		XMFLOAT4
+		XMFLOAT4,
+		XMFLOAT3,
+		XMFLOAT4,
+		float
 	);
 	void RenderShader(ID3D11DeviceContext*, int);
 
@@ -77,5 +90,6 @@ private:
 	ID3D11InputLayout* m_layout;
 	ID3D11SamplerState* m_sampleState;
 	ID3D11Buffer* m_matrixBuffer;
+	ID3D11Buffer* m_cameraBuffer;
 	ID3D11Buffer* m_lightBuffer;
 };

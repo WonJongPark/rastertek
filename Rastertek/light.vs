@@ -13,6 +13,11 @@ cbuffer MatrixBuffer
     matrix projectionMatrix;
 };
 
+cbuffer CameraBuffer
+{
+    float3 cameraPosition;
+    float padding;
+};
 
 //////////////
 // TYPEDEFS //
@@ -29,6 +34,7 @@ struct PixelInputType
     float4 position : SV_POSITION;
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
+    float3 viewDirection : TEXCOORD1;
 };
 
 
@@ -38,6 +44,7 @@ struct PixelInputType
 PixelInputType LightVertexShader(VertexInputType input)
 {
     PixelInputType output;
+    float4 worldPosition;
     
     
     // 올바른 행렬 계산을 위해 위치 벡터를 4성분으로 만듦.
@@ -56,6 +63,15 @@ PixelInputType LightVertexShader(VertexInputType input)
     
     // 법선 벡터를 정규화.
     output.normal = normalize(output.normal);
+    
+    // 월드 공간에서의 정점 위치를 계산.
+    worldPosition = mul(input.position, worldMatrix);
+    
+    // 월드 공간의 정점에서 카메라를 향하는 시선 벡터를 계산.
+    output.viewDirection = cameraPosition.xyz - worldPosition.xyz;
+    
+    // 시선 방향 벡터를 정규화.
+    output.viewDirection = normalize(output.viewDirection);
     
     return output;
 }

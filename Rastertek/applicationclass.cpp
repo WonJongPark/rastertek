@@ -55,7 +55,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
 
 	// 모델 파일 이름을 설정.
-	strcpy_s(modelFilename, "data/cube.txt");
+	strcpy_s(modelFilename, "data/sphere.txt");
 
 	// 불러올 텍스처 파일의 이름을 설정.
 	strcpy_s(textureFilename, "data/stone01.tga");
@@ -87,6 +87,8 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetDirection(1.0f, 0.0f, 0.0f);
+	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Light->SetSpecularPower(32.0f);
 
 	return true;
 }
@@ -177,7 +179,7 @@ bool ApplicationClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
-	// 큐브의 Y축 회전을 월드 행렬에 적용.
+	// 모델의 Y축 회전을 월드 행렬에 적용.
 	worldMatrix = XMMatrixRotationY(rotation);
 
 	// 모델의 정점·인덱스 버퍼를 그래픽 파이프라인에 올려 그릴 준비를 함.
@@ -193,7 +195,10 @@ bool ApplicationClass::Render(float rotation)
 		m_Model->GetTexture(),
 		m_Light->GetDirection(),
 		m_Light->GetAmbientColor(),
-		m_Light->GetDiffuseColor()
+		m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(),
+		m_Light->GetSpecularColor(),
+		m_Light->GetSpecularPower()
 	);
 	if (!result)
 	{

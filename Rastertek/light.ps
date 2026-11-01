@@ -14,7 +14,8 @@ cbuffer LightBuffer
     float4 ambientColor;
     float4 diffuseColor;
     float3 lightDirection;
-    float padding;
+    float specularPower;
+    float4 specularColor;
 };
 
 
@@ -26,6 +27,7 @@ struct PixelInputType
     float4 position : SV_POSITION;
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
+    float3 viewDirection : TEXCOORD1;
 };
 
 
@@ -38,6 +40,8 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
     float3 lightDir;
     float lightIntensity;
     float4 color;
+    float3 reflection;
+    float4 specular;
     
     
     // 이 텍스처 좌표 위치에서 샘플러로 텍스처의 픽셀 색을 샘플링.
@@ -45,6 +49,9 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
     
     // 모든 픽셀의 기본 출력 색을 앰비언트 빛 값으로 설정.
     color = ambientColor;
+    
+    // 스펙큘러 색을 초기화.
+    specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
     
     // 계산을 위해 빛 방향을 반전.
     lightDir = -lightDirection;
@@ -56,6 +63,16 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
     {
         // 디퓨즈 색과 빛의 세기를 바탕으로 최종 디퓨즈 색을 결정.
         color += (diffuseColor * lightIntensity);
+        
+        // Ambient와 Diffuse를 합친 색의 각 성분을 0~1로 제한.
+        color = saturate(color);
+        
+        // 빛의 세기, 법선 벡터, 빛 방향을 이용해 반사 벡터를 계산.
+        reflection = normalize(2.0f * lightIntensity * input.normal - lightDir);
+        
+        // 반사·시선 벡터의 내적과 지수로 세기를 구한 뒤 Specular 색을 곱함.
+        specular = specularColor * pow(saturate(dot(reflection, input.viewDirection)), specularPower);
+
     }
     
     // 최종 조명 색을 0~1 범위로 제한함.
@@ -63,6 +80,9 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
     
     // 텍스처 색과 Ambient·Diffuse를 합친 조명 색을 곱해 최종 픽셀 색을 계산함.
     color = color * textureColor;
+    
+    // 스펙큘러 성분을 맨 마지막에 출력 색에 더함.
+    color = saturate(color + specular);
     
     return color;
 }
