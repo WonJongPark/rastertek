@@ -9,7 +9,7 @@ ApplicationClass::ApplicationClass()
 	m_Camera = nullptr;
 	m_Model = nullptr;
 	m_LightShader = nullptr;
-	m_Light = nullptr;
+	m_Lights = nullptr;
 }
 
 
@@ -52,10 +52,11 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// 카메라의 초기 위치를 설정.
-	m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
+	m_Camera->SetPosition(0.0f, 2.0f, -12.0f);
+	m_Camera->Render();
 
 	// 모델 파일 이름을 설정.
-	strcpy_s(modelFilename, "data/sphere.txt");
+	strcpy_s(modelFilename, "data/plane.txt");
 
 	// 불러올 텍스처 파일의 이름을 설정.
 	strcpy_s(textureFilename, "data/stone01.tga");
@@ -81,14 +82,24 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	// 빛 객체를 생성하고 초기화.
-	m_Light = new LightClass;
+	// 사용할 광원의 개수를 설정.
+	m_numLights = 4;
 
-	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
-	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetDirection(1.0f, 0.0f, 0.0f);
-	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetSpecularPower(32.0f);
+	// 광원 객체 배열을 생성하고 초기화.
+	m_Lights = new LightClass[m_numLights];
+
+	// 각 조명의 색과 위치를 직접 설정.
+	m_Lights[0].SetDiffuseColor(1.0f, 0.0f, 0.0f, 1.0f);  // 빨강
+	m_Lights[0].SetPosition(-3.0f, 1.0f, 3.0f);
+
+	m_Lights[1].SetDiffuseColor(0.0f, 1.0f, 0.0f, 1.0f);  // 초록
+	m_Lights[1].SetPosition(3.0f, 1.0f, 3.0f);
+
+	m_Lights[2].SetDiffuseColor(0.0f, 0.0f, 1.0f, 1.0f);  // 파랑
+	m_Lights[2].SetPosition(-3.0f, 1.0f, -3.0f);
+
+	m_Lights[3].SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);  // 흰색
+	m_Lights[3].SetPosition(3.0f, 1.0f, -3.0f);
 
 	return true;
 }
@@ -97,10 +108,10 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 void ApplicationClass::Shutdown()
 {
 	// 라이트 객체를 해제.
-	if (m_Light)
+	if (m_Lights)
 	{
-		delete m_Light;
-		m_Light = nullptr;
+		delete [] m_Lights;
+		m_Lights = nullptr;
 	}
 
 	// 라이트 셰이더 객체를 해제.
@@ -140,19 +151,10 @@ void ApplicationClass::Shutdown()
 
 bool ApplicationClass::Frame()
 {
-	static float rotation = 0.0f;
 	bool result = false;
 
-	// 큐브 회전값을 매 프레임 갱신.
-	rotation -= 0.0174532925f * 0.25f;
-	if (rotation < 0.0f)
-	{
-		// 같은 방향을 유지하면서 회전각을 양수로 돌려놓음.
-		rotation += XM_2PI;
-	}
-
 	// 그래픽 씬 렌더링
-	result = Render(rotation);
+	result = Render();
 	if (!result)
 	{
 		return false;
@@ -162,9 +164,11 @@ bool ApplicationClass::Frame()
 }
 
 
-bool ApplicationClass::Render(float rotation)
+bool ApplicationClass::Render()
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	XMFLOAT4 diffuseColor[4], lightPosition[4];
+	int i;
 	bool result;
 
 
@@ -179,8 +183,16 @@ bool ApplicationClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
-	// 모델의 Y축 회전을 월드 행렬에 적용.
-	worldMatrix = XMMatrixRotationY(rotation);
+	// 광원 속성을 가져옴.
+	for (i = 0; i < m_numLights; i++)
+	{
+		// 네 광원의 색으로 디퓨즈 색 배열을 만듬.
+		diffuseColor[i] = m_Lights[i].GetDiffuseColor();
+
+		// 네 광원의 위치로 광원 위치 배열을 만듬.
+		lightPosition[i] = m_Lights[i].GetPosition();
+	}
+
 
 	// 모델의 정점·인덱스 버퍼를 그래픽 파이프라인에 올려 그릴 준비를 함.
 	m_Model->Render(m_Direct3D->GetDeviceContext());
@@ -193,12 +205,8 @@ bool ApplicationClass::Render(float rotation)
 		viewMatrix,
 		projectionMatrix,
 		m_Model->GetTexture(),
-		m_Light->GetDirection(),
-		m_Light->GetAmbientColor(),
-		m_Light->GetDiffuseColor(),
-		m_Camera->GetPosition(),
-		m_Light->GetSpecularColor(),
-		m_Light->GetSpecularPower()
+		diffuseColor,
+		lightPosition
 	);
 	if (!result)
 	{
