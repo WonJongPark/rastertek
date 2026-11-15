@@ -10,6 +10,7 @@ D3DClass::D3DClass()
 	m_deviceContext = nullptr;
 	m_renderTargetView = nullptr;
 	m_depthStencilBuffer = nullptr;
+	m_depthDisabledStencilState = nullptr;
 	m_depthStencilState = nullptr;
 	m_depthStencilView = nullptr;
 	m_rasterState = nullptr;
@@ -377,6 +378,16 @@ bool D3DClass::Initialize(
 	// 2D 렌더링용 직교 투영 행렬를 생성.
 	m_orthoMatrix = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
 
+	// 기존 상태를 복사하고 2D용 깊이 검사만 비활성화함.
+	D3D11_DEPTH_STENCIL_DESC depthDisabledStencilDesc = depthStencilDesc;
+	depthDisabledStencilDesc.DepthEnable = false;
+
+	result = m_device->CreateDepthStencilState(&depthDisabledStencilDesc, &m_depthDisabledStencilState);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -386,6 +397,12 @@ void D3DClass::Shutdown()
 	if (m_swapChain)
 	{
 		m_swapChain->SetFullscreenState(false, NULL);
+	}
+
+	if (m_depthDisabledStencilState)
+	{
+		m_depthDisabledStencilState->Release();
+		m_depthDisabledStencilState = nullptr;
 	}
 
 	if (m_rasterState)
@@ -524,4 +541,14 @@ void D3DClass::ResetViewport()
 	m_deviceContext->RSSetViewports(1, &m_viewport);
 
 	return;
+}
+
+void D3DClass::TurnZBufferOn()
+{
+	m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+}
+
+void D3DClass::TurnZBufferOff()
+{
+	m_deviceContext->OMSetDepthStencilState(m_depthDisabledStencilState, 1);
 }
